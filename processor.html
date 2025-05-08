@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KahootMate - Process Report</title>
+  <link rel="stylesheet" href="src/css/processor.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>KahootMate</h1>
+      <p class="subtitle">Process Kahoot Reports</p>
+    </header>
+
+    <div class="card" id="upload-card">
+      <h2>Upload Kahoot Report</h2>
+      <div class="drop-area" id="drop-area">
+        <p>Drag and drop your Kahoot report here</p>
+        <p>or</p>
+        <label for="file-input" class="file-input-label">Choose File</label>
+        <input type="file" id="file-input" accept=".xlsx" hidden>
+      </div>
+      <div id="file-info" class="hidden">
+        <p>Selected file: <span id="filename"></span></p>
+        <button id="process-file-btn">Process Report</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="processing-card">
+      <h2>Processing Report</h2>
+      <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <p id="processing-status">Parsing file...</p>
+    </div>
+
+    <div class="card hidden" id="results-card">
+      <h2>Results</h2>
+      <div id="summary">
+        <p>Total students: <span id="total-students">0</span></p>
+        <p>Pairs created: <span id="pairs-count">0</span></p>
+      </div>
+      <div id="pairs-container"></div>
+      <button id="download-pdf-btn">Download PDF</button>
+    </div>
+  </div>
+
+  <!-- Load libraries -->
+  <script src="lib/xlsx.full.min.js"></script>
+  <script src="lib/jspdf.umd.min.js"></script>
+  <script src="lib/jspdf.plugin.autotable.min.js"></script>
+  
+  <!-- Load our scripts -->
+  <script src="src/js/processor.js"></script>
+</body>
+</html>
