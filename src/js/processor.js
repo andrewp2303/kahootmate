@@ -13,14 +13,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultsCard = document.getElementById('results-card');
   const progressBar = document.getElementById('progress-bar');
   const processingStatus = document.getElementById('processing-status');
-  const totalStudents = document.getElementById('total-students');
-  const pairsCount = document.getElementById('pairs-count');
   const pairsContainer = document.getElementById('pairs-container');
-  const downloadPdfBtn = document.getElementById('download-pdf-btn');
+  const downloadTeamsPdfBtn = document.getElementById('download-teams-pdf-btn');
+  const downloadResultsPdfBtn = document.getElementById('download-results-pdf-btn');
+  const backButton = document.getElementById('back-button');
 
   // State variables
   let selectedFile = null;
   let processedData = null;
+  let lastReportPath = null;
 
   // Check if we should auto-suggest a file
   const urlParams = new URLSearchParams(window.location.search);
@@ -36,11 +37,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000);
         
         if (report.timestamp > thirtyMinutesAgo) {
-          // We could auto-suggest the file here, but for now we'll just show a message
-          dropArea.innerHTML = `<p>Recently detected: ${report.filename}</p>
-                               <p>Please upload the file using the button below</p>
+          // Store the file path for later use
+          lastReportPath = report.filename;
+          
+          // Update the drop area with the detected file information
+          dropArea.innerHTML = `<p style="text-align: center;">Recently detected: <span class="detected-file">${report.filename}</span></p>
+                               <p>Click below to upload this file</p>
                                <label for="file-input" class="file-input-label">Choose File</label>
                                <input type="file" id="file-input" accept=".xlsx" hidden>`;
+          
+          // Re-get the file input element since we replaced the HTML
+          const updatedFileInput = document.getElementById('file-input');
+          
+          // Add event listener to the new file input
+          updatedFileInput.addEventListener('click', (e) => {
+            try {
+              // Try to set the file input's value to the detected file path
+              // Note: This may not work due to browser security restrictions
+              // but we'll try anyway and handle any errors
+              if (lastReportPath) {
+                // For security reasons, we can't directly set the value of a file input
+                // But we can try to focus the file dialog on the right directory
+                console.log('Attempting to focus on file:', lastReportPath);
+                
+                // Store the path in localStorage for potential use by the OS file picker
+                localStorage.setItem('lastReportPath', lastReportPath);
+              }
+            } catch (error) {
+              console.log('Could not pre-select file:', error);
+              // Continue with normal file selection
+            }
+          });
+          
+          // Update event listeners for the new elements
+          updatedFileInput.addEventListener('change', handleFileSelect);
         }
       }
     });
@@ -71,7 +101,12 @@ document.addEventListener('DOMContentLoaded', () => {
   dropArea.addEventListener('drop', handleDrop);
   fileInput.addEventListener('change', handleFileSelect);
   processFileBtn.addEventListener('click', processFile);
-  downloadPdfBtn.addEventListener('click', generatePDF);
+  downloadTeamsPdfBtn.addEventListener('click', generateTeamsPDF);
+  downloadResultsPdfBtn.addEventListener('click', generateResultsPDF);
+  backButton.addEventListener('click', () => {
+    resultsCard.classList.add('hidden');
+    uploadCard.classList.remove('hidden');
+  });
 
   // File handling functions
   function handleDrop(e) {
@@ -120,28 +155,27 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         updateProgress(30, 'Parsing Excel data...');
         
-        // Since we're having issues with the SheetJS library parsing the Excel file,
-        // we'll use our test data directly to demonstrate the functionality
-        console.log('Using test data to demonstrate functionality');
+        // Parse the Excel file using SheetJS
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Find the "Final Scores" sheet or use the first sheet
+        let sheetName = workbook.SheetNames.find(name => name.includes('Final') && name.includes('Scores')) || workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert the worksheet to JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 'A' });
         
         updateProgress(70, 'Processing data...');
         
-        // Use the test data from the sample file
-        const testData = [
-          { name: 'AndrewP', rawScore: 956 },
-          { name: 'NotEyob', rawScore: 736 }
-        ];
-        
-        // Process the test data
-        processedData = processKahootData(testData);
+        // Extract student data from the Excel file
+        // Process the extracted data
+        processedData = processKahootData(jsonData);
         
         // Check if we have valid processed data
         if (!processedData.students || processedData.students.length === 0) {
           throw new Error('Error processing the data');
         }
-        
-        // Add a note that we're using test data
-        console.log('Using test data:', testData);
         
         // In a production version, we would handle the Excel parsing more robustly
         // For now, we're using test data to demonstrate the functionality
@@ -264,9 +298,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (n % 2 === 0) {
       // Even number of students - pair highest with lowest
       for (let i = 0; i < n / 2; i++) {
+        // Randomly decide if student1 should be the higher or lower scoring student
+        const randomizeOrder = Math.random() > 0.5;
         pairs.push({
-          student1: studentsWithNoise[i],
-          student2: studentsWithNoise[n - 1 - i]
+          student1: randomizeOrder ? studentsWithNoise[i] : studentsWithNoise[n - 1 - i],
+          student2: randomizeOrder ? studentsWithNoise[n - 1 - i] : studentsWithNoise[i]
         });
       }
     } else {
@@ -275,18 +311,37 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Pair all except the middle three
       for (let i = 0; i < (n - 3) / 2; i++) {
+        // Randomly decide if student1 should be the higher or lower scoring student
+        const randomizeOrder = Math.random() > 0.5;
         pairs.push({
-          student1: studentsWithNoise[i],
-          student2: studentsWithNoise[n - 1 - i]
+          student1: randomizeOrder ? studentsWithNoise[i] : studentsWithNoise[n - 1 - i],
+          student2: randomizeOrder ? studentsWithNoise[n - 1 - i] : studentsWithNoise[i]
         });
       }
       
-      // Create a trio with the middle three students
+      // Create a trio with the middle three students (randomize order)
+      const trioStudents = [
+        studentsWithNoise[middleIndex - 1],
+        studentsWithNoise[middleIndex],
+        studentsWithNoise[middleIndex + 1]
+      ];
+      // Shuffle the trio
+      for (let i = trioStudents.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [trioStudents[i], trioStudents[j]] = [trioStudents[j], trioStudents[i]];
+      }
+      
       pairs.push({
-        student1: studentsWithNoise[middleIndex - 1],
-        student2: studentsWithNoise[middleIndex],
-        student3: studentsWithNoise[middleIndex + 1]
+        student1: trioStudents[0],
+        student2: trioStudents[1],
+        student3: trioStudents[2]
       });
+    }
+    
+    // Randomize the order of the pairs
+    for (let i = pairs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
     }
     
     return {
@@ -303,8 +358,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Display the results in the UI
   function displayResults(data) {
     // Update summary stats
-    totalStudents.textContent = data.students.length;
-    pairsCount.textContent = data.pairs.length;
+    const summaryElement = document.getElementById('summary');
+    summaryElement.innerHTML = `<p class="summary-stats">${data.pairs.length} team${data.pairs.length === 1 ? '' : 's'} created from ${data.students.length} students</p>`;
+    
+    // Update heading
+    const resultsHeading = document.querySelector('#results-card h2');
+    resultsHeading.textContent = 'Teams';
+    resultsHeading.className = 'teams-heading';
     
     // Clear previous results
     pairsContainer.innerHTML = '';
@@ -313,16 +373,20 @@ document.addEventListener('DOMContentLoaded', () => {
     data.pairs.forEach((pair, index) => {
       const pairElement = document.createElement('div');
       pairElement.className = 'pair-item';
+      // Add alternating background color
+      if (index % 2 === 0) {
+        pairElement.classList.add('even-row');
+      } else {
+        pairElement.classList.add('odd-row');
+      }
       
-      // Create HTML for the first student
+      // Create HTML for the team without scores
       let pairHTML = `
         <div class="student">
           <div class="student-name">${pair.student1.name}</div>
-          <div class="student-score">Original Score: ${pair.student1.rawScore.toFixed(1)}</div>
         </div>
         <div class="student">
           <div class="student-name">${pair.student2.name}</div>
-          <div class="student-score">Original Score: ${pair.student2.rawScore.toFixed(1)}</div>
         </div>
       `;
       
@@ -331,7 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
         pairHTML += `
           <div class="student">
             <div class="student-name">${pair.student3.name}</div>
-            <div class="student-score">Original Score: ${pair.student3.rawScore.toFixed(1)}</div>
           </div>
         `;
       }
@@ -341,8 +404,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Generate and download PDF
-  function generatePDF() {
+  // Generate and download Teams PDF (without scores)
+  function generateTeamsPDF() {
     if (!processedData) {
       alert('No data to export');
       return;
@@ -354,28 +417,113 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add title
     doc.setFontSize(20);
     doc.setTextColor(70, 23, 143); // Kahoot purple
-    doc.text('Kahoot Pairings Report', 105, 15, { align: 'center' });
+    doc.text('Kahoot Teams Report', 105, 15, { align: 'center' });
     
-    // Add timestamp
+    // Add date (without time)
     doc.setFontSize(10);
     doc.setTextColor(100, 100, 100);
     const now = new Date();
-    doc.text(`Generated on ${now.toLocaleDateString()} at ${now.toLocaleTimeString()}`, 105, 22, { align: 'center' });
+    doc.text(`Generated on ${now.toLocaleDateString()}`, 105, 22, { align: 'center' });
     
-    // Add summary
-    doc.setFontSize(12);
+    // Add summary in larger font on one line
+    doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Total Students: ${processedData.students.length}`, 20, 30);
-    doc.text(`Pairs Created: ${processedData.pairs.length}`, 20, 37);
+    doc.text(`Total Students: ${processedData.students.length} | Teams Created: ${processedData.pairs.length}`, 105, 30, { align: 'center' });
     
-    // Create table data for pairs
+    // Create table data for pairs (without scores)
     const tableData = [];
     
     // Add header row
     const hasTrioGroup = processedData.pairs.some(pair => pair.student3);
     const headers = hasTrioGroup ? 
-      ['Group', 'Student 1', 'Score', 'Student 2', 'Score', 'Student 3', 'Score'] :
-      ['Pair', 'Student 1', 'Score', 'Student 2', 'Score'];
+      ['Team', 'Student 1', 'Student 2', 'Student 3'] :
+      ['Team', 'Student 1', 'Student 2'];
+    
+    tableData.push(headers);
+    
+    // Add data rows
+    processedData.pairs.forEach((pair, index) => {
+      const row = [
+        `${index + 1}`,
+        pair.student1.name,
+        pair.student2.name
+      ];
+      
+      // Add third student if this is a trio
+      if (pair.student3) {
+        row.push(pair.student3.name);
+      } else if (hasTrioGroup) {
+        // Add empty cell to maintain table structure
+        row.push('');
+      }
+      
+      tableData.push(row);
+    });
+    
+    // Create the table
+    doc.autoTable({
+      head: [tableData[0]],
+      body: tableData.slice(1),
+      startY: 40,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [70, 23, 143],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [240, 240, 250]
+      },
+      margin: { top: 40 }
+    });
+    
+    // Add footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(10);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Generated by KahootMate', 105, doc.internal.pageSize.height - 10, { align: 'center' });
+    }
+    
+    // Save the PDF
+    doc.save('Kahoot_Teams.pdf');
+  }
+  
+  // Generate and download Results PDF (with scores)
+  function generateResultsPDF() {
+    if (!processedData) {
+      alert('No data to export');
+      return;
+    }
+    
+    // Create a new jsPDF instance
+    const doc = new jspdf.jsPDF();
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.setTextColor(70, 23, 143); // Kahoot purple
+    doc.text('Kahoot Results Report', 105, 15, { align: 'center' });
+    
+    // Add date (without time)
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    const now = new Date();
+    doc.text(`Generated on ${now.toLocaleDateString()}`, 105, 22, { align: 'center' });
+    
+    // Add summary in larger font on one line
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total Students: ${processedData.students.length} | Teams Created: ${processedData.pairs.length}`, 105, 30, { align: 'center' });
+    
+    // Create table data for pairs with scores
+    const tableData = [];
+    
+    // Add header row
+    const hasTrioGroup = processedData.pairs.some(pair => pair.student3);
+    const headers = hasTrioGroup ? 
+      ['Team', 'Student 1', 'Score', 'Student 2', 'Score', 'Student 3', 'Score'] :
+      ['Team', 'Student 1', 'Score', 'Student 2', 'Score'];
     
     tableData.push(headers);
     
@@ -406,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
     doc.autoTable({
       head: [tableData[0]],
       body: tableData.slice(1),
-      startY: 45,
+      startY: 40,
       theme: 'grid',
       headStyles: {
         fillColor: [70, 23, 143],
@@ -416,7 +564,7 @@ document.addEventListener('DOMContentLoaded', () => {
       alternateRowStyles: {
         fillColor: [240, 240, 250]
       },
-      margin: { top: 45 }
+      margin: { top: 40 }
     });
     
     // Add footer
@@ -429,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Save the PDF
-    doc.save('Kahoot_Pairings.pdf');
+    doc.save('Kahoot_Results.pdf');
   }
 
   // Helper function to update progress bar

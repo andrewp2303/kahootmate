@@ -3,13 +3,16 @@
   "name": "KahootMate",
   "version": "1.0",
   "description": "Process Kahoot reports to add noise, sort, and pair students",
-  "permissions": ["downloads", "storage", "notifications"],
+  "permissions": ["downloads", "storage", "notifications", "tabs", "activeTab"],
+  "host_permissions": ["*://*.kahoot.com/*", "*://*.kahoot.it/*"],
   "background": {
-    "service_worker": "src/js/background.js"
+    "service_worker": "src/js/background.js",
+    "type": "module"
   },
   "content_scripts": [{
-    "matches": ["*://*.kahoot.com/*"],
-    "js": ["src/js/content.js"]
+    "matches": ["*://*.kahoot.com/*", "*://*.kahoot.it/*", "*://*.kahoot.com/reports/*"],
+    "js": ["src/js/content.js"],
+    "run_at": "document_start"
   }],
   "action": {
     "default_popup": "popup.html",
@@ -23,5 +26,9 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "web_accessible_resources": [{
+    "resources": ["processor.html", "icons/*"],
+    "matches": ["*://*.kahoot.com/*", "*://*.kahoot.it/*"]
+  }]
 }

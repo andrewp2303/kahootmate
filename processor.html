@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KahootMate - Process Report</title>
   <link rel="stylesheet" href="src/css/processor.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
     <header>
       <h1>KahootMate</h1>
-      <p class="subtitle">Process Kahoot Reports</p>
+      <p class="subtitle">Kahoot Team Generator!</p>
     </header>
 
     <div class="card" id="upload-card">
@@ -36,13 +37,18 @@
     </div>
 
     <div class="card hidden" id="results-card">
-      <h2>Results</h2>
+      <div class="back-button" id="back-button">
+        <span class="back-icon">← Back</span>
+      </div>
+      <h2>Teams</h2>
       <div id="summary">
-        <p>Total students: <span id="total-students">0</span></p>
-        <p>Pairs created: <span id="pairs-count">0</span></p>
+        <!-- Summary stats will be inserted here by JS -->
       </div>
       <div id="pairs-container"></div>
-      <button id="download-pdf-btn">Download PDF</button>
+      <div class="download-buttons">
+        <button id="download-teams-pdf-btn">Download Teams</button>
+        <button id="download-results-pdf-btn">Download Results</button>
+      </div>
     </div>
   </div>
 
