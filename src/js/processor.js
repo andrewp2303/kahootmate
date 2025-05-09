@@ -507,12 +507,12 @@ document.addEventListener('DOMContentLoaded', () => {
       studentsHTML += `
         <div class="student">
           <div class="student-name ${isStudent1Teacher ? 'teacher' : ''}">
-            ${isStudent1Teacher ? '<strong>' + student1Name + ' (T)</strong>' : student1Name}
+            ${isStudent1Teacher ? '<strong><i class="fas fa-star"></i> ' + student1Name + '</strong>' : student1Name}
           </div>
         </div>
         <div class="student">
           <div class="student-name ${isStudent2Teacher ? 'teacher' : ''}">
-            ${isStudent2Teacher ? '<strong>' + student2Name + ' (T)</strong>' : student2Name}
+            ${isStudent2Teacher ? '<strong><i class="fas fa-star"></i> ' + student2Name + '</strong>' : student2Name}
           </div>
         </div>
       `;
