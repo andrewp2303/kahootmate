@@ -179,6 +179,27 @@ button:hover {
   margin-bottom: 8px;
 }
 
+/* Container for students (left side, 2/3 width) */
+.students-container {
+  display: flex;
+  flex: 2;
+  justify-content: space-between;
+}
+
+/* Container for teaching mode (right side, 1/3 width) */
+.mode-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--kahoot-purple);
+  padding-left: 10px;
+  border-left: 1px solid #e0e0e0;
+  font-size: 14px;
+  text-align: center;
+}
+
 .even-row {
   background-color: white;
 }
@@ -199,6 +220,17 @@ button:hover {
   font-weight: 600;
   font-size: 18px;
   text-align: center;
+}
+
+/* Teacher styling */
+.student-name.teacher {
+  color: var(--kahoot-purple);
+}
+
+.student-name.teacher strong {
+  color: var(--kahoot-purple);
+  font-weight: 700;
+
 }
 
 #results-card {

@@ -255,9 +255,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const variance = students.reduce((sum, student) => sum + Math.pow(student.rawScore - mean, 2), 0) / students.length;
     const stdDev = Math.sqrt(variance);
     
+    // Configuration parameters
+    // noiseFactor: controls the amount of Gaussian noise added (as a proportion of stdDev)
+    // alpha: threshold for determining teaching mode (in standard deviations)
+    const noiseFactor = 0.2; // Can be adjusted as needed
+    const alpha = 1.0; // Default threshold for teaching mode assignment
+    
     // Add Gaussian noise proportional to the standard deviation
-    // We'll use a noise factor of 0.2 * stdDev
-    const noiseFactor = 0.2 * stdDev;
+    const noiseAmount = noiseFactor * stdDev;
     
     const studentsWithNoise = students.map(student => {
       // Box-Muller transform to generate Gaussian noise
@@ -266,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
       
       // Apply noise proportional to the standard deviation
-      const noise = z0 * noiseFactor;
+      const noise = z0 * noiseAmount;
       const noisyScore = student.rawScore + noise;
       
       return {
@@ -278,18 +283,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sort by noisy score (descending)
     studentsWithNoise.sort((a, b) => b.noisyScore - a.noisyScore);
     
-    // Create pairs (highest with lowest)
+    // Create pairs (highest with lowest) and determine teaching mode
     const pairs = [];
     const n = studentsWithNoise.length;
     
     if (n % 2 === 0) {
       // Even number of students - pair highest with lowest
       for (let i = 0; i < n / 2; i++) {
+        // Get the higher and lower scoring students
+        const higherStudent = studentsWithNoise[i];
+        const lowerStudent = studentsWithNoise[n - 1 - i];
+        
+        // Calculate score difference in terms of standard deviations
+        const scoreDiff = Math.abs(higherStudent.noisyScore - lowerStudent.noisyScore) / stdDev;
+        
+        // Determine teaching mode based on alpha threshold
+        const teachingMode = scoreDiff > alpha ? 'Pair-Teach-Share' : 'Think-Pair-Share';
+        
         // Randomly decide if student1 should be the higher or lower scoring student
         const randomizeOrder = Math.random() > 0.5;
         pairs.push({
-          student1: randomizeOrder ? studentsWithNoise[i] : studentsWithNoise[n - 1 - i],
-          student2: randomizeOrder ? studentsWithNoise[n - 1 - i] : studentsWithNoise[i]
+          student1: randomizeOrder ? higherStudent : lowerStudent,
+          student2: randomizeOrder ? lowerStudent : higherStudent,
+          teachingMode,
+          // Store which student is the teacher (the higher scoring one)
+          teacher: randomizeOrder ? 'student1' : 'student2'
         });
       }
     } else {
@@ -298,11 +316,24 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Pair all except the middle three
       for (let i = 0; i < (n - 3) / 2; i++) {
+        // Get the higher and lower scoring students
+        const higherStudent = studentsWithNoise[i];
+        const lowerStudent = studentsWithNoise[n - 1 - i];
+        
+        // Calculate score difference in terms of standard deviations
+        const scoreDiff = Math.abs(higherStudent.noisyScore - lowerStudent.noisyScore) / stdDev;
+        
+        // Determine teaching mode based on alpha threshold
+        const teachingMode = scoreDiff > alpha ? 'Pair-Teach-Share' : 'Think-Pair-Share';
+        
         // Randomly decide if student1 should be the higher or lower scoring student
         const randomizeOrder = Math.random() > 0.5;
         pairs.push({
-          student1: randomizeOrder ? studentsWithNoise[i] : studentsWithNoise[n - 1 - i],
-          student2: randomizeOrder ? studentsWithNoise[n - 1 - i] : studentsWithNoise[i]
+          student1: randomizeOrder ? higherStudent : lowerStudent,
+          student2: randomizeOrder ? lowerStudent : higherStudent,
+          teachingMode,
+          // Store which student is the teacher (the higher scoring one)
+          teacher: randomizeOrder ? 'student1' : 'student2'
         });
       }
       
@@ -318,10 +349,13 @@ document.addEventListener('DOMContentLoaded', () => {
         [trioStudents[i], trioStudents[j]] = [trioStudents[j], trioStudents[i]];
       }
       
+      // For trios, we'll use Think-Pair-Share by default
       pairs.push({
         student1: trioStudents[0],
         student2: trioStudents[1],
-        student3: trioStudents[2]
+        student3: trioStudents[2],
+        teachingMode: 'Think-Pair-Share',
+        teacher: null // No designated teacher for trios
       });
     }
     
@@ -337,7 +371,8 @@ document.addEventListener('DOMContentLoaded', () => {
       stats: {
         mean,
         stdDev,
-        noiseFactor
+        noiseFactor,
+        alpha
       }
     };
   }
@@ -367,26 +402,59 @@ document.addEventListener('DOMContentLoaded', () => {
         pairElement.classList.add('odd-row');
       }
       
-      // Create HTML for the team without scores
-      let pairHTML = `
+      // Create a container for students (left side, 2/3 width)
+      const studentsContainer = document.createElement('div');
+      studentsContainer.className = 'students-container';
+      
+      // Create a container for teaching mode (right side, 1/3 width)
+      const modeContainer = document.createElement('div');
+      modeContainer.className = 'mode-container';
+      modeContainer.textContent = pair.teachingMode || 'Think-Pair-Share';
+      
+      // Create HTML for the students
+      let studentsHTML = '';
+      
+      // Truncate names to 15 chars if needed and add styling for teacher
+      const student1Name = pair.student1.name.length > 15 ? 
+        pair.student1.name.substring(0, 15) + '...' : pair.student1.name;
+      const student2Name = pair.student2.name.length > 15 ? 
+        pair.student2.name.substring(0, 15) + '...' : pair.student2.name;
+      
+      // Add styling for teacher if in Pair-Teach-Share mode
+      const isStudent1Teacher = pair.teachingMode === 'Pair-Teach-Share' && pair.teacher === 'student1';
+      const isStudent2Teacher = pair.teachingMode === 'Pair-Teach-Share' && pair.teacher === 'student2';
+      
+      studentsHTML += `
         <div class="student">
-          <div class="student-name">${pair.student1.name}</div>
+          <div class="student-name ${isStudent1Teacher ? 'teacher' : ''}">
+            ${isStudent1Teacher ? '<strong>' + student1Name + '</strong>' : student1Name}
+          </div>
         </div>
         <div class="student">
-          <div class="student-name">${pair.student2.name}</div>
+          <div class="student-name ${isStudent2Teacher ? 'teacher' : ''}">
+            ${isStudent2Teacher ? '<strong>' + student2Name + '</strong>' : student2Name}
+          </div>
         </div>
       `;
       
       // Add third student if this is a trio
       if (pair.student3) {
-        pairHTML += `
+        const student3Name = pair.student3.name.length > 15 ? 
+          pair.student3.name.substring(0, 15) + '...' : pair.student3.name;
+        
+        studentsHTML += `
           <div class="student">
-            <div class="student-name">${pair.student3.name}</div>
+            <div class="student-name">${student3Name}</div>
           </div>
         `;
       }
       
-      pairElement.innerHTML = pairHTML;
+      studentsContainer.innerHTML = studentsHTML;
+      
+      // Add the containers to the pair element
+      pairElement.appendChild(studentsContainer);
+      pairElement.appendChild(modeContainer);
+      
       pairsContainer.appendChild(pairElement);
     });
   }
@@ -423,26 +491,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add header row
     const hasTrioGroup = processedData.pairs.some(pair => pair.student3);
     const headers = hasTrioGroup ? 
-      ['Team', 'Student 1', 'Student 2', 'Student 3'] :
-      ['Team', 'Student 1', 'Student 2'];
+      ['Team', 'Student 1', 'Student 2', 'Student 3', 'Teaching Mode'] :
+      ['Team', 'Student 1', 'Student 2', 'Teaching Mode'];
     
     tableData.push(headers);
     
     // Add data rows
     processedData.pairs.forEach((pair, index) => {
+      // Truncate names to 15 chars if needed
+      const student1Name = pair.student1.name.length > 15 ? 
+        pair.student1.name.substring(0, 15) + '...' : pair.student1.name;
+      const student2Name = pair.student2.name.length > 15 ? 
+        pair.student2.name.substring(0, 15) + '...' : pair.student2.name;
+      
+      // Mark the teacher if in Pair-Teach-Share mode
+      let s1Name = student1Name;
+      let s2Name = student2Name;
+      
+      if (pair.teachingMode === 'Pair-Teach-Share') {
+        if (pair.teacher === 'student1') {
+          s1Name = student1Name + ' (T)';
+        } else if (pair.teacher === 'student2') {
+          s2Name = student2Name + ' (T)';
+        }
+      }
+      
       const row = [
         `${index + 1}`,
-        pair.student1.name,
-        pair.student2.name
+        s1Name,
+        s2Name
       ];
       
       // Add third student if this is a trio
       if (pair.student3) {
-        row.push(pair.student3.name);
+        const student3Name = pair.student3.name.length > 15 ? 
+          pair.student3.name.substring(0, 15) + '...' : pair.student3.name;
+        row.push(student3Name);
       } else if (hasTrioGroup) {
         // Add empty cell to maintain table structure
         row.push('');
       }
+      
+      // Add teaching mode
+      row.push(pair.teachingMode || 'Think-Pair-Share');
       
       tableData.push(row);
     });
