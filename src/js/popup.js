@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         reportNameElem.textContent = filename;
         
         // Change the waiting message to be more action-oriented
-        waitingMsg.textContent = 'Kahoot report detected!';
+        waitingMsg.textContent = 'Report download detected!';
 
         uploadBtnContainer.classList.add('hidden');
         

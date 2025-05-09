@@ -37,8 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Replace drop-area HTML with detected file UI
           dropArea.innerHTML = `
-            <p style="text-align:center;">Recently detected: <span class="detected-file">${report.filename}</span></p>
-            <p>Click below or drag and drop to upload this file</p>
+            <p style="text-align:center;">Recently downloaded: <span class="detected-file" style="max-width: fit-content; margin: 6px auto;">${report.filename}</span></p>
+            <p>Click below or drag and drop to upload this (or another) file</p>
             <label for="file-input" class="file-input-label">Choose File</label>
             <input type="file" id="file-input" accept=".xlsx" hidden>
           `;
@@ -85,9 +85,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Process button
   processFileBtn.addEventListener('click', processFile);
 
-  // Open picker only when clicking directly on drop-area
-  dropArea.addEventListener('click', e => {
-    if (e.target === dropArea) {
+  // Open picker when clicking in the drop-area, but avoid double-triggering when clicking on the file input label
+  dropArea.addEventListener('click', (e) => {
+    // Check if the click is on the file-input-label or its parent label
+    const fileLabel = e.target.closest('.file-input-label');
+    const parentLabel = e.target.closest('label');
+    
+    // Only trigger file input click if not clicking on the Choose File button or its parent label
+    if (!fileLabel && !parentLabel) {
       fileInput.click();
     }
   });
