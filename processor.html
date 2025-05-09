@@ -6,6 +6,7 @@
   <title>KahootMate</title>
   <link rel="stylesheet" href="src/css/processor.css">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   <div class="container">
@@ -39,18 +40,19 @@
     </div>
 
     <div class="card hidden" id="results-card">
-      <div class="back-button" id="back-button">
-        <span class="back-icon">← Back</span>
+      <div class="navigation-bar">
+        <div class="back-button" id="back-button">
+          <span class="back-icon">← Back</span>
+        </div>
+        <div class="download-button" id="download-teams-pdf-btn">
+          <span class="download-icon"><i class="fas fa-download"></i> Teams Report</span>
+        </div>
       </div>
       <h2>Teams</h2>
       <div id="summary">
         <!-- Summary stats will be inserted here by JS -->
       </div>
       <div id="pairs-container"></div>
-      <div class="download-buttons">
-        <button id="download-teams-pdf-btn">Download Teams</button>
-        <button id="download-results-pdf-btn">Download Results</button>
-      </div>
     </div>
   </div>
 

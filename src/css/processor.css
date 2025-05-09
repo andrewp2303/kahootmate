@@ -237,51 +237,37 @@ button:hover {
   position: relative;
 }
 
-.back-button {
+.navigation-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  margin-top: -8px;
+}
+
+.back-button, .download-button {
   display: flex;
   align-items: center;
   color: var(--kahoot-purple);
   font-weight: 600;
   cursor: pointer;
-  margin-bottom: 4px;
-  margin-top: -8px;
   transition: color 0.2s;
+  padding: 8px 12px;
+  border-radius: 4px;
 }
 
-.back-button:hover {
+.back-button:hover, .download-button:hover {
   color: var(--kahoot-purple-light);
+  background-color: var(--kahoot-purple-lighter);
 }
 
-.back-icon {
+.back-icon, .download-icon {
   margin-right: 6px;
-  font-size: 22px;
+  font-size: 16px;
 }
 
-.download-buttons {
-  max-width: 70%;
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
+.download-icon i {
+  margin-right: 4px;
 }
 
-#download-teams-pdf-btn,
-#download-results-pdf-btn {
-  margin: 0 10px;
-}
-
-#download-teams-pdf-btn:first-child {
-  padding: 10px 0px;
-  flex: 3;
-  margin-left: 0;
-}
-
-#download-results-pdf-btn:last-child {
-  padding: 10px 0px;
-  background-color:darkred;
-  transition: background-color 0.2s;
-  &:hover {
-    background-color: rgb(172, 59, 59);
-  }
-  flex: 2;
-  margin-right: 0;
-}
+/* Removed download buttons styles as they're no longer needed */
