@@ -113,6 +113,17 @@ h2 {
   background-color: var(--kahoot-purple-light);
 }
 
+.file-selection-text {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.selected-filename {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--kahoot-purple);
+}
+
 button {
   background-color: var(--kahoot-purple);
   color: white;
