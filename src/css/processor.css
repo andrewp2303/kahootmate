@@ -51,8 +51,17 @@ h2 {
   color: #6a3ab7;
   font-size: 32px;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   margin-top: 10px;
+}
+
+.kahoot-subtitle {
+  color: var(--kahoot-dark);
+  font-size: 16px;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-style: italic;
 }
 
 .card {

@@ -9,12 +9,35 @@ const workbook = XLSX.read(sampleFile, { type: 'buffer' });
 // Print all sheet names
 console.log('Available sheets:', workbook.SheetNames);
 
+// Examine the Overview sheet first
+const overviewSheetName = workbook.SheetNames.find(name => name.includes('Overview'));
+if (overviewSheetName) {
+  console.log('\nExamining Overview sheet:');
+  const overviewSheet = workbook.Sheets[overviewSheetName];
+  
+  // Convert to JSON to see the structure
+  const overviewData = XLSX.utils.sheet_to_json(overviewSheet, { header: 'A' });
+  console.log('Overview sheet data (first 10 rows):');
+  console.log(JSON.stringify(overviewData.slice(0, 10), null, 2));
+  
+  // Look for cells that might contain the Kahoot name and date
+  console.log('\nSearching for Kahoot name and date in Overview sheet:');
+  let kahootName = null;
+  let kahootDate = null;
+  
+  // Examine the first 10 rows to find potential Kahoot name and date
+  for (let i = 0; i < Math.min(10, overviewData.length); i++) {
+    const row = overviewData[i];
+    console.log(`Row ${i}:`, row);
+  }
+}
+
 // Find the "Final Scores" sheet
 const sheetName = workbook.SheetNames.find(name => 
   name.toLowerCase().includes('final') || 
   name.toLowerCase().includes('score')) || workbook.SheetNames[0];
 
-console.log(`Using sheet: ${sheetName}`);
+console.log(`\nUsing sheet for student data: ${sheetName}`);
 
 // Get the worksheet
 const worksheet = workbook.Sheets[sheetName];

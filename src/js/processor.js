@@ -144,6 +144,58 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
         
+        // Extract Kahoot name and date from Overview tab
+        let kahootInfo = {
+          name: 'Kahoot Quiz',
+          date: new Date().toLocaleDateString()
+        };
+        
+        // Try to find the Overview sheet
+        const overviewSheetName = workbook.SheetNames.find(name => name.includes('Overview'));
+        if (overviewSheetName) {
+          const overviewSheet = workbook.Sheets[overviewSheetName];
+          const overviewData = XLSX.utils.sheet_to_json(overviewSheet, { header: 'A' });
+          
+          // Based on the sample Excel structure:
+          // - Kahoot name is in the first row, column A (A1)
+          // - Date is in the second row, column B (B2) with "Played on" in column A
+          
+          if (overviewData.length > 0) {
+            // Extract Kahoot name from first row, column A
+            if (overviewData[0] && overviewData[0].A && typeof overviewData[0].A === 'string') {
+              // Get the name and remove " Kahoot" if present
+              let quizName = overviewData[0].A.trim();
+              kahootInfo.name = quizName.replace(/ Kahoot$/i, '');
+            }
+            
+            // Extract date from second row, column B (where A is "Played on")
+            if (overviewData.length > 1 && overviewData[1]) {
+              if (overviewData[1].A === 'Played on' && overviewData[1].B) {
+                try {
+                  // Try to parse the date
+                  const dateValue = overviewData[1].B;
+                  if (typeof dateValue === 'string') {
+                    // If it's a string like "8 May 2025"
+                    kahootInfo.date = dateValue;
+                  } else if (typeof dateValue === 'object' && dateValue instanceof Date) {
+                    // If it's already a Date object
+                    kahootInfo.date = dateValue.toLocaleDateString();
+                  } else if (typeof dateValue === 'number') {
+                    // If it's a numeric Excel date
+                    const excelDate = new Date(Math.round((dateValue - 25569) * 86400 * 1000));
+                    if (!isNaN(excelDate.getTime())) {
+                      kahootInfo.date = excelDate.toLocaleDateString();
+                    }
+                  }
+                } catch (e) {
+                  console.log('Error parsing date:', e);
+                  // Keep the default date
+                }
+              }
+            }
+          }
+        }
+        
         // Find the "Final Scores" sheet or use the first sheet
         let sheetName = workbook.SheetNames.find(name => name.includes('Final') && name.includes('Scores')) || workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
@@ -156,6 +208,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Extract student data from the Excel file
         // Process the extracted data
         processedData = processKahootData(jsonData);
+        
+        // Add Kahoot info to the processed data
+        processedData.kahootInfo = kahootInfo;
         
         // Check if we have valid processed data
         if (!processedData.students || processedData.students.length === 0) {
@@ -386,6 +441,20 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsHeading.textContent = 'Teams';
     resultsHeading.className = 'teams-heading';
     
+    // Add Kahoot name and date subtitle
+    if (data.kahootInfo) {
+      // Create subtitle element if it doesn't exist
+      let subtitleElement = document.querySelector('#results-card .kahoot-subtitle');
+      if (!subtitleElement) {
+        subtitleElement = document.createElement('p');
+        subtitleElement.className = 'kahoot-subtitle';
+        // Insert after the heading
+        resultsHeading.insertAdjacentElement('afterend', subtitleElement);
+      }
+      // Update subtitle text
+      subtitleElement.textContent = `${data.kahootInfo.name} - ${data.kahootInfo.date}`;
+    }
+    
     // Clear previous results
     pairsContainer.innerHTML = '';
     
@@ -425,12 +494,12 @@ document.addEventListener('DOMContentLoaded', () => {
       studentsHTML += `
         <div class="student">
           <div class="student-name ${isStudent1Teacher ? 'teacher' : ''}">
-            ${isStudent1Teacher ? '<strong>' + student1Name + '</strong>' : student1Name}
+            ${isStudent1Teacher ? '<strong>' + student1Name + ' (T)</strong>' : student1Name}
           </div>
         </div>
         <div class="student">
           <div class="student-name ${isStudent2Teacher ? 'teacher' : ''}">
-            ${isStudent2Teacher ? '<strong>' + student2Name + '</strong>' : student2Name}
+            ${isStudent2Teacher ? '<strong>' + student2Name + ' (T)</strong>' : student2Name}
           </div>
         </div>
       `;
