@@ -101,6 +101,14 @@ document.addEventListener('DOMContentLoaded', () => {
   dropArea.addEventListener('drop', handleDrop);
   fileInput.addEventListener('change', handleFileSelect);
   processFileBtn.addEventListener('click', processFile);
+  
+  // Make the entire drop area clickable for file input
+  dropArea.addEventListener('click', function(e) {
+    // Prevent triggering if the click was on the file input label (which already triggers the file input)
+    if (!e.target.closest('label[for="file-input"]')) {
+      fileInput.click();
+    }
+  });
   downloadTeamsPdfBtn.addEventListener('click', generateTeamsPDF);
   downloadResultsPdfBtn.addEventListener('click', generateResultsPDF);
   backButton.addEventListener('click', () => {
