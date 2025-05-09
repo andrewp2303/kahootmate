@@ -644,8 +644,34 @@ document.addEventListener('DOMContentLoaded', () => {
         heightLeft -= pageHeight;
       }
       
-      // Save the PDF
-      pdf.save('Kahoot_Teams.pdf');
+      // Save the PDF with formatted name
+      let fileName = `KahootMate_${new Date().toLocaleDateString('en-US', {month: '2-digit', day: '2-digit', year: '2-digit'}).replace(/\//g, '-')}.pdf`;
+      
+      // If we have the kahoot subtitle, extract the name and date
+      if (kahootSubtitle) {
+        const subtitleText = kahootSubtitle.textContent;
+        // Extract kahoot name and date from format like "Template Algebra - 8 May 2025"
+        const match = subtitleText.match(/(.+)\s+-\s+(\d+)\s+(\w+)\s+(\d+)/);
+        
+        if (match) {
+          const kahootName = match[1].trim().replace(/\s+/g, '_'); // Replace spaces with underscores
+          const day = match[2];
+          const month = match[3];
+          const year = match[4];
+          
+          // Convert month name to number
+          const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+          const monthNum = monthNames.findIndex(m => m === month) + 1;
+          
+          // Format date as MM-DD-YY
+          const formattedDate = `${monthNum}-${day}-${year.slice(-2)}`;
+          
+          // Final filename format: KahootMate_MM-DD-YY_Kahoot_Name.pdf
+          fileName = `KahootMate_${formattedDate}_${kahootName}.pdf`;
+        }
+      }
+      
+      pdf.save(fileName);
       
       // Clean up - remove temporary elements
       document.body.removeChild(tempContainer);
@@ -660,8 +686,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Generate and download Results PDF function has been removed
-
   // Helper function to update progress bar
   function updateProgress(percent, statusText) {
     progressBar.style.width = `${percent}%`;
