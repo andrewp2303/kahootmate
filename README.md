@@ -18,8 +18,8 @@ Install the extension at [link]
 
 ## Usage
 
-1. Navigate to Kahoot website in teacher mode, build a classic Kahoot, and have your students take it!
-2. On the Kahoot website go to Reports > Report options > click on "Download report"
+1. Navigate to the Kahoot website in teacher mode, build a classic Kahoot, and have your students take it!
+2. On the Kahoot website, go to Reports > Report options > click on "Download report"
 3. KahootMate will detect the report and encourage you to upload it
 4. Click on the upload button, drag the downloaded report in (or choose another report), and click "Process Report"
 5. View the team groupings, and download them as a PDF if you want!
