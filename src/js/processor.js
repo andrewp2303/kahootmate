@@ -4,7 +4,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // DOM Elements
   const dropArea = document.getElementById('drop-area');
-  const fileInput = document.getElementById('file-input');
+  let fileInput = document.getElementById('file-input');  // use let so we can reassign after dynamic HTML
   const fileInfo = document.getElementById('file-info');
   const filename = document.getElementById('filename');
   const processFileBtn = document.getElementById('process-file-btn');
@@ -23,92 +23,77 @@ document.addEventListener('DOMContentLoaded', () => {
   let processedData = null;
   let lastReportPath = null;
 
-  // Check if we should auto-suggest a file
+  // Detect manual vs. auto-upload
   const urlParams = new URLSearchParams(window.location.search);
   const isManualUpload = urlParams.get('manual') === 'true';
 
   if (!isManualUpload) {
     // Try to get the last detected Kahoot report
     chrome.storage.local.get(['lastKahootReport'], (result) => {
-      if (result.lastKahootReport) {
-        const report = result.lastKahootReport;
-        
-        // Only use if the report was detected in the last 30 minutes
-        const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000);
-        
+      const report = result.lastKahootReport;
+      if (report) {
+        const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
         if (report.timestamp > thirtyMinutesAgo) {
-          // Store the file path for later use
           lastReportPath = report.filename;
-          
-          // Update the drop area with the detected file information
-          dropArea.innerHTML = `<p style="text-align: center;">Recently detected: <span class="detected-file">${report.filename}</span></p>
-                               <p>Click below to upload this file</p>
-                               <label for="file-input" class="file-input-label">Choose File</label>
-                               <input type="file" id="file-input" accept=".xlsx" hidden>`;
-          
-          // Re-get the file input element since we replaced the HTML
-          const updatedFileInput = document.getElementById('file-input');
-          
-          // Add event listener to the new file input
-          updatedFileInput.addEventListener('click', (e) => {
+
+          // Replace drop-area HTML with detected file UI
+          dropArea.innerHTML = `
+            <p style="text-align:center;">Recently detected: <span class="detected-file">${report.filename}</span></p>
+            <p>Click below or drag and drop to upload this file</p>
+            <label for="file-input" class="file-input-label">Choose File</label>
+            <input type="file" id="file-input" accept=".xlsx" hidden>
+          `;
+
+          // Re-bind fileInput to the new element
+          fileInput = document.getElementById('file-input');
+          // Prevent bubbling from native click
+          fileInput.addEventListener('click', e => e.stopPropagation());
+          // Handle file selection
+          fileInput.addEventListener('change', handleFileSelect);
+          // Optional: try to focus picker on lastReportPath (best-effort)
+          fileInput.addEventListener('click', () => {
             try {
-              // Try to set the file input's value to the detected file path
-              // Note: This may not work due to browser security restrictions
-              // but we'll try anyway and handle any errors
               if (lastReportPath) {
-                // For security reasons, we can't directly set the value of a file input
-                // But we can try to focus the file dialog on the right directory
-                console.log('Attempting to focus on file:', lastReportPath);
-                
-                // Store the path in localStorage for potential use by the OS file picker
+                console.log('Focusing on:', lastReportPath);
                 localStorage.setItem('lastReportPath', lastReportPath);
               }
-            } catch (error) {
-              console.log('Could not pre-select file:', error);
-              // Continue with normal file selection
+            } catch (err) {
+              console.log('Pre-select failed:', err);
             }
           });
-          
-          // Update event listeners for the new elements
-          updatedFileInput.addEventListener('change', handleFileSelect);
         }
       }
     });
   }
 
-  // File Drop Area Event Listeners
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropArea.addEventListener(eventName, preventDefaults, false);
+  // Prevent default drag behaviors
+  ['dragenter','dragover','dragleave','drop'].forEach(evt => {
+    dropArea.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
   });
 
-  function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-
-  ['dragenter', 'dragover'].forEach(eventName => {
-    dropArea.addEventListener(eventName, () => {
-      dropArea.classList.add('active');
-    });
+  // Highlight on drag
+  ['dragenter','dragover'].forEach(evt => {
+    dropArea.addEventListener(evt, () => dropArea.classList.add('active'));
+  });
+  ['dragleave','drop'].forEach(evt => {
+    dropArea.addEventListener(evt, () => dropArea.classList.remove('active'));
   });
 
-  ['dragleave', 'drop'].forEach(eventName => {
-    dropArea.addEventListener(eventName, () => {
-      dropArea.classList.remove('active');
-    });
-  });
-
+  // Handle drop
   dropArea.addEventListener('drop', handleDrop);
+  // File picker change
   fileInput.addEventListener('change', handleFileSelect);
+  // Process button
   processFileBtn.addEventListener('click', processFile);
-  
-  // Make the entire drop area clickable for file input
-  dropArea.addEventListener('click', function(e) {
-    // Prevent triggering if the click was on the file input label (which already triggers the file input)
-    if (!e.target.closest('label[for="file-input"]')) {
+
+  // Open picker only when clicking directly on drop-area
+  dropArea.addEventListener('click', e => {
+    if (e.target === dropArea) {
       fileInput.click();
     }
   });
+
+  // Navigation buttons
   downloadTeamsPdfBtn.addEventListener('click', generateTeamsPDF);
   downloadResultsPdfBtn.addEventListener('click', generateResultsPDF);
   backButton.addEventListener('click', () => {
@@ -118,20 +103,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // File handling functions
   function handleDrop(e) {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    
-    if (files.length) {
-      handleFiles(files);
-    }
+    const files = e.dataTransfer.files;
+    if (files.length) handleFiles(files);
   }
 
   function handleFileSelect(e) {
     const files = e.target.files;
-    
-    if (files.length) {
-      handleFiles(files);
-    }
+    if (files.length) handleFiles(files);
+    fileInput.value = '';
   }
 
   function handleFiles(files) {

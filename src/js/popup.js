@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lastReportDiv = document.getElementById('last-report');
   const reportNameElem = document.getElementById('report-name');
   const processBtn = document.getElementById('process-btn');
+  const uploadBtnContainer = document.getElementById('upload-btn-container');
   const uploadBtn = document.getElementById('upload-btn');
   const waitingMsg = document.querySelector('.container > p');
 
@@ -28,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Change the waiting message to be more action-oriented
         waitingMsg.textContent = 'Kahoot report detected!';
+
+        uploadBtnContainer.classList.add('hidden');
         
         // If this popup was opened right after detection, focus on the process button
         if (reportDetected) {

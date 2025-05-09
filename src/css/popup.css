@@ -80,7 +80,7 @@ button:hover {
 }
 
 .footer {
-  margin-top: 16px;
+  margin-top: 2px;
   padding-top: 16px;
   border-top: 1px solid var(--kahoot-light);
 }
