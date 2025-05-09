@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // noiseFactor: controls the amount of Gaussian noise added (as a proportion of stdDev)
     // alpha: threshold for determining teaching mode (in standard deviations)
     const noiseFactor = 0.2; // Can be adjusted as needed
-    const alpha = 1.0; // Default threshold for teaching mode assignment
+    const alpha = 1.5; // Default threshold for teaching mode assignment
     
     // Add Gaussian noise proportional to the standard deviation
     const noiseAmount = noiseFactor * stdDev;
@@ -402,7 +402,7 @@ document.addEventListener('DOMContentLoaded', () => {
         [trioStudents[i], trioStudents[j]] = [trioStudents[j], trioStudents[i]];
       }
       
-      // For trios, we'll use Think-Pair-Share by default
+      // For trios, always use Think-Pair-Share (as requested)
       pairs.push({
         student1: trioStudents[0],
         student2: trioStudents[1],
@@ -476,6 +476,14 @@ document.addEventListener('DOMContentLoaded', () => {
       // Create a container for teaching mode (right side, 1/3 width)
       const modeContainer = document.createElement('div');
       modeContainer.className = 'mode-container';
+      
+      // Add specific class based on teaching mode for color styling
+      if (pair.teachingMode === 'Pair-Teach-Share') {
+        modeContainer.classList.add('mode-pair-teach-share');
+      } else {
+        modeContainer.classList.add('mode-think-pair-share');
+      }
+      
       modeContainer.textContent = pair.teachingMode || 'Think-Pair-Share';
       
       // Create HTML for the students

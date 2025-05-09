@@ -174,7 +174,7 @@ button:hover {
 }
 
 #summary {
-  background-color: var(--kahoot-light);
+  background-color: var(--kahoot-purple-lighter);
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 20px;
@@ -213,11 +213,18 @@ button:hover {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: var(--kahoot-purple);
   padding-left: 10px;
   border-left: 1px solid #e0e0e0;
   font-size: 14px;
   text-align: center;
+}
+
+.mode-think-pair-share {
+  color: #4b6cb7; /* Purplish blue */
+}
+
+.mode-pair-teach-share {
+  color: #b74b6c; /* Purplish red */
 }
 
 .even-row {
@@ -225,7 +232,7 @@ button:hover {
 }
 
 .odd-row {
-  background-color: var(--kahoot-purple-lighter);
+  background-color: var(--kahoot-light);
 }
 
 .student {

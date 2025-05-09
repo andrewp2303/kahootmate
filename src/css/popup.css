@@ -56,12 +56,28 @@ button:hover {
   background-color: #5a2ba3;
 }
 
+.file-input-label {
+  display: inline-block;
+  background-color: var(--kahoot-purple);
+  color: white;
+  padding: 8px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0px;
+  transition: background-color 0.2s;
+  min-width: 160px;
+}
+
+.file-input-label:hover {
+  background-color: var(--kahoot-purple-light);
+}
+
 .hidden {
   display: none;
 }
 
 #last-report {
-  margin: 16px 0;
+  margin: 10px 0;
   padding: 12px;
   background-color: var(--kahoot-light);
   border-radius: 4px;
@@ -77,6 +93,7 @@ button:hover {
   text-align: center;
   padding: 0 0;
   display: block;
+  margin: 0px 0px 6px 0px;
 }
 
 .footer {
