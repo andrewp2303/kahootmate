@@ -67,6 +67,9 @@ kahootmate/
 │       ├── content.js    # Content script
 │       ├── popup.js      # Popup script
 │       └── processor.js  # Processor page script
+├── test/                 # Test files
+│   ├── test.js           # Main test script
+│   └── test_excel.js     # Excel processing test script
 ├── manifest.json         # Extension manifest
 ├── popup.html            # Popup HTML
 └── processor.html        # Processor page HTML
