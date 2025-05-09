@@ -1,19 +1,12 @@
 # KahootMate
 
-A Chrome extension that processes Kahoot report downloads, adds noise to scores, creates student pairings, and exports results as PDF.
-
-## Features
-
-- **Automatic Detection**: Detects `.xlsx` report downloads from kahoot.com
-- **Data Processing**: 
-  - Adds Gaussian noise to scores (proportional to standard deviation)
-  - Sorts students by noisy score
-  - Pairs highest-scoring with lowest-scoring students
-  - Handles odd numbers of students with a middle trio
-- **PDF Export**: Generates a styled PDF with student pairings
-- **Kahoot Branding**: Uses Kahoot's signature purple (#46178F) for UI elements
+A Chrome extension that enhances Kahoot classroom experiences by dynamically pairing students based on quiz results. KahootMate processes Kahoot Excel reports, adds controlled randomization to scores, and creates balanced student pairings for cooperative and hierarchical learning.
 
 ## Installation
+
+### Chrome Web Store
+
+Install the extension at [link]
 
 ### Development Mode
 
@@ -23,31 +16,48 @@ A Chrome extension that processes Kahoot report downloads, adds noise to scores,
 4. Click "Load unpacked" and select the project directory
 5. The KahootMate extension should now appear in your extensions list
 
-### Usage
+## Usage
 
-1. Visit kahoot.com and download a report (`.xlsx` file)
-2. The extension will detect the download and show a notification
-3. Click "Process Now" in the notification to open the processor page
-4. Upload the downloaded file (or it may be auto-suggested)
-5. The extension will process the data and display student pairings
-6. Click "Download PDF" to export the pairings as a PDF file
+1. Navigate to Kahoot website in teacher mode, build a classic Kahoot, and have your students take it!
+2. On the Kahoot website go to Reports > Report options > click on "Download report"
+3. KahootMate will detect the report and encourage you to upload it
+4. Click on the upload button, drag the downloaded report in (or choose another report), and click "Process Report"
+5. View the team groupings, and download them as a PDF if you want!
+
+## How It Works
+
+KahootMate follows this process:
+
+1. **Detection**: Listens for `.xlsx` file downloads from kahoot.com
+2. **Processing**: Prompts you to provide the Kahoot report with all students' results
+3. **Noise Addition**: Adds Gaussian noise to results proportional to `noiseFactor * standard deviation`, ensuring results aren't fully deterministic and that outlier students don't always get the same partners
+4. **Ranking**: Sorts students based on these noisy results
+5. **Matching**: Pairs students so the top performer works with the lowest performer, second-highest with second-lowest, and so on to the middle
+   - If pairs are more than `alpha * standard deviation` apart in score, they follow a Pair-Teach-Share model with the higher-performing student as "teacher"
+   - If there's an odd number of students, a group of 3 is formed from the median students, following a Think-Pair-Share approach
+6. **Randomization**: Teams (top to bottom) and team members (left and right) are uniformly randomly sorted to remove bias
+
+## Sample Report
+
+The repository includes a sample Kahoot report for testing purposes. This sample contains fake student data and demonstrates the format of Kahoot Excel reports, which should have a "Final Scores" sheet with student names in column B and their scores in column C starting from row 4.
 
 ## Technical Details
 
 - Built with Manifest V3 for Chrome Extensions
 - Uses SheetJS for Excel parsing
-- Uses jsPDF for PDF generation
+- Uses jsPDF and HTML2Canvas for PDF generation
 - All processing happens client-side (no server required)
 
 ## Project Structure
 
-```
+```bash
 kahootmate/
 ├── icons/                # Extension icons
 ├── lib/                  # Third-party libraries
 │   ├── xlsx.full.min.js  # SheetJS library
 │   ├── jspdf.umd.min.js  # jsPDF library
-│   └── jspdf.plugin.autotable.min.js  # jsPDF AutoTable plugin
+│   ├── jspdf.plugin.autotable.min.js  # jsPDF AutoTable plugin
+│   └── html2canvas.min.js  # html2canvas library
 ├── src/
 │   ├── css/              # Stylesheets
 │   │   ├── popup.css     # Popup styles
