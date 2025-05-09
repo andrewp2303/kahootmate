@@ -1,6 +1,35 @@
 // Content script for KahootMate
 // Injected into Kahoot pages to detect report downloads
 
+// Helper function to safely send messages to the background script
+function safelySendMessage(message, callback) {
+  // First check if chrome.runtime is defined and not in an error state
+  if (typeof chrome !== 'undefined' && chrome.runtime && !chrome.runtime.id) {
+    console.warn('Extension context invalidated, cannot send message');
+    return false;
+  }
+  
+  try {
+    // Check if chrome.runtime exists and has the sendMessage function
+    if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage(message, function(response) {
+        if (chrome.runtime.lastError) {
+          console.warn('Error sending message:', chrome.runtime.lastError.message);
+          return;
+        }
+        if (callback) callback(response);
+      });
+      return true;
+    } else {
+      console.warn('chrome.runtime.sendMessage is not available');
+      return false;
+    }
+  } catch (error) {
+    console.error('Failed to send message:', error);
+    return false;
+  }
+}
+
 console.log('KahootMate content script loaded on Kahoot page:', window.location.href);
 
 // Function to detect the "Download report" button and other download actions
@@ -37,12 +66,11 @@ function setupDownloadButtonListener() {
       console.log('Potential Kahoot report download action detected!');
       
       // Notify the background script that a report download was initiated
-      chrome.runtime.sendMessage({
+      safelySendMessage({
         action: 'kahoot_report_download_initiated',
         timestamp: Date.now(),
         url: window.location.href
       }, response => {
-        // Log the response to verify communication
         console.log('Background script response:', response);
       });
     }
@@ -82,7 +110,7 @@ function setupDownloadButtonListener() {
 function logPotentialDownloadAction(event) {
   if (event.target.tagName === 'A' && event.target.href?.includes('.xlsx')) {
     console.log('Excel download link interaction detected:', event.type, event.target.href);
-    chrome.runtime.sendMessage({
+    safelySendMessage({
       action: 'kahoot_report_download_initiated',
       timestamp: Date.now(),
       url: event.target.href
@@ -99,7 +127,7 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 }
 
 // Send a ping to the background script to verify communication
-chrome.runtime.sendMessage({
+safelySendMessage({
   action: 'content_script_loaded',
   url: window.location.href
 }, response => {
