@@ -33,8 +33,8 @@ KahootMate follows this process:
 3. **Noise Addition**: Adds Gaussian noise to results proportional to `noiseFactor * standard deviation`, ensuring results aren't fully deterministic and that outlier students don't always get the same partners
 4. **Ranking**: Sorts students based on these noisy results
 5. **Matching**: Pairs students so the top performer works with the lowest performer, second-highest with second-lowest, and so on to the middle
-   - If pairs are more than `alpha * standard deviation` apart in score, they follow a Pair-Teach-Share model with the higher-performing student as "teacher"
-   - If there's an odd number of students, a group of 3 is formed from the median students, following a Think-Pair-Share approach
+   - If pairs are more than `alpha * standard deviation` apart in score, they follow a Think-Lead-Learn model with the higher-performing student as "leader"
+   - If there's an odd number of students, a group of 3 is formed from the median students, following a Think-Mix-Master approach
 6. **Randomization**: Teams (top to bottom) and team members (left and right) are uniformly randomly sorted to remove bias
 
 ## Sample Report

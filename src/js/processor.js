@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const scoreDiff = Math.abs(higherStudent.noisyScore - lowerStudent.noisyScore) / stdDev;
         
         // Determine teaching mode based on alpha threshold
-        const teachingMode = scoreDiff > alpha ? 'Pair-Teach-Share' : 'Think-Pair-Share';
+        const teachingMode = scoreDiff > alpha ? 'Think-Lead-Learn' : 'Think-Mix-Master';
         
         // Randomly decide if student1 should be the higher or lower scoring student
         const randomizeOrder = Math.random() > 0.5;
@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const scoreDiff = Math.abs(higherStudent.noisyScore - lowerStudent.noisyScore) / stdDev;
         
         // Determine teaching mode based on alpha threshold
-        const teachingMode = scoreDiff > alpha ? 'Pair-Teach-Share' : 'Think-Pair-Share';
+        const teachingMode = scoreDiff > alpha ? 'Think-Lead-Learn' : 'Think-Mix-Master';
         
         // Randomly decide if student1 should be the higher or lower scoring student
         const randomizeOrder = Math.random() > 0.5;
@@ -407,12 +407,12 @@ document.addEventListener('DOMContentLoaded', () => {
         [trioStudents[i], trioStudents[j]] = [trioStudents[j], trioStudents[i]];
       }
       
-      // For trios, always use Think-Pair-Share (as requested)
+      // For trios, always use Think-Mix-Master (as requested)
       pairs.push({
         student1: trioStudents[0],
         student2: trioStudents[1],
         student3: trioStudents[2],
-        teachingMode: 'Think-Pair-Share',
+        teachingMode: 'Think-Mix-Master',
         teacher: null // No designated teacher for trios
       });
     }
@@ -483,13 +483,13 @@ document.addEventListener('DOMContentLoaded', () => {
       modeContainer.className = 'mode-container';
       
       // Add specific class based on teaching mode for color styling
-      if (pair.teachingMode === 'Pair-Teach-Share') {
-        modeContainer.classList.add('mode-pair-teach-share');
+      if (pair.teachingMode === 'Think-Lead-Learn') {
+        modeContainer.classList.add('mode-think-lead-learn');
       } else {
-        modeContainer.classList.add('mode-think-pair-share');
+        modeContainer.classList.add('mode-think-mix-master');
       }
       
-      modeContainer.textContent = pair.teachingMode || 'Think-Pair-Share';
+      modeContainer.textContent = pair.teachingMode || 'Think-Mix-Master';
       
       // Create HTML for the students
       let studentsHTML = '';
