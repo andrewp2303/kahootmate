@@ -500,9 +500,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const student2Name = pair.student2.name.length > 15 ? 
         pair.student2.name.substring(0, 15) + '...' : pair.student2.name;
       
-      // Add styling for teacher if in Pair-Teach-Share mode
-      const isStudent1Teacher = pair.teachingMode === 'Pair-Teach-Share' && pair.teacher === 'student1';
-      const isStudent2Teacher = pair.teachingMode === 'Pair-Teach-Share' && pair.teacher === 'student2';
+      // Add styling for teacher if in Think-Lead-Learn mode
+      const isStudent1Teacher = pair.teachingMode === 'Think-Lead-Learn' && pair.teacher === 'student1';
+      const isStudent2Teacher = pair.teachingMode === 'Think-Lead-Learn' && pair.teacher === 'student2';
       
       studentsHTML += `
         <div class="student">
